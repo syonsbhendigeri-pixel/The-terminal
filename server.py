@@ -23,269 +23,271 @@ H = 8500
 
 
 def calc_gravity(h):
-  return G * (M_E / (R_E + h) ** 2)
+    return G * (M_E / (R_E + h) ** 2)
 
 
 def calc_density(h):
-  return rho_0 * np.exp(-h / H)
+    return rho_0 * np.exp(-h / H)
 
 
 def calc_terminal_velocity(m, h, A):
-  return np.sqrt((2 * m * calc_gravity(h)) / (D * calc_density(h) * A))
+    return np.sqrt((2 * m * calc_gravity(h)) / (D * calc_density(h) * A))
 
 
 def safe_eval(expr):
-  clean = str(expr).replace("^", "**")
-  val = float(
-      eval(
-          clean,
-          {"__builtins__": None},
-          {"sqrt": math.sqrt, "pi": math.pi, "exp": math.exp},
-      )
-  )
-  if val <= 0:
-    raise ValueError("Must be positive")
-  return val
+    clean = str(expr).replace("^", "**")
+    val = float(
+        eval(
+            clean,
+            {"__builtins__": None},
+            {"sqrt": math.sqrt, "pi": math.pi, "exp": math.exp},
+        )
+    )
+    if val <= 0:
+        raise ValueError("Must be positive")
+    return val
 
 
 def render_drop_gif(m, h, A, g_val, vt_val):
-  fig, ax = plt.subplots(figsize=(7, 3.6), facecolor="#020617")
-  ax.set_facecolor("#020617")
-  ax.set_xlim(0, 10)
-  ax.set_ylim(0, h * 1.12)
-  ax.set_ylabel("Altitude (m)", color="#94a3b8", fontsize=9)
-  ax.set_xticks([])
-  ax.tick_params(colors="#94a3b8")
-  for spine in ax.spines.values():
-    spine.set_color("#1e293b")
+    fig, ax = plt.subplots(figsize=(7, 3.6), facecolor="#020617")
+    ax.set_facecolor("#020617")
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0, h * 1.12)
+    ax.set_ylabel("Altitude (m)", color="#94a3b8", fontsize=9)
+    ax.set_xticks([])
+    ax.tick_params(colors="#94a3b8")
+    for spine in ax.spines.values():
+        spine.set_color("#1e293b")
 
-  ax.axhline(0, color="#34d399", lw=2)
-  ax.text(
-      0.2,
-      h * 0.02,
-      "EARTH SURFACE (0 m)",
-      color="#34d399",
-      fontsize=8,
-      fontweight="bold",
-  )
+    ax.axhline(0, color="#34d399", lw=2)
+    ax.text(
+        0.2,
+        h * 0.02,
+        "EARTH SURFACE (0 m)",
+        color="#34d399",
+        fontsize=8,
+        fontweight="bold",
+    )
 
-  sphere_size = min(450, max(120, 120 + math.sqrt(A) * 90))
-  sphere = ax.scatter(
-      (5,), (h,), s=sphere_size, color="#38bdf8", edgecolors="white", zorder=5
-  )
+    sphere_size = min(450, max(120, 120 + math.sqrt(A) * 90))
+    sphere = ax.scatter(
+        (5,), (h,), s=sphere_size, color="#38bdf8", edgecolors="white", zorder=5
+    )
 
-  rng = np.random.default_rng(42)
-  wind_x = rng.uniform(0.5, 9.5, 18)
-  wind_y = rng.uniform(0, h, 18)
-  wind = ax.scatter(
-      wind_x, wind_y, marker="|", s=80, color="#38bdf8", alpha=0.35
-  )
+    rng = np.random.default_rng(42)
+    wind_x = rng.uniform(0.5, 9.5, 18)
+    wind_y = rng.uniform(0, h, 18)
+    wind = ax.scatter(
+        wind_x, wind_y, marker="|", s=80, color="#38bdf8", alpha=0.35
+    )
 
-  hud = ax.text(
-      0.3,
-      h * 0.96,
-      "",
-      color="#f8fafc",
-      fontsize=9,
-      family="monospace",
-      va="top",
-  )
-  status = ax.text(
-      9.7,
-      h * 0.96,
-      "",
-      color="#fb923c",
-      fontsize=9,
-      family="monospace",
-      fontweight="bold",
-      ha="right",
-      va="top",
-  )
+    hud = ax.text(
+        0.3,
+        h * 0.96,
+        "",
+        color="#f8fafc",
+        fontsize=9,
+        family="monospace",
+        va="top",
+    )
+    status = ax.text(
+        9.7,
+        h * 0.96,
+        "",
+        color="#fb923c",
+        fontsize=9,
+        family="monospace",
+        fontweight="bold",
+        ha="right",
+        va="top",
+    )
 
-  total_frames = 40
-  t_total = (vt_val / g_val) * 4.5
-  times = np.linspace(0, t_total, total_frames)
+    total_frames = 40
+    t_total = (vt_val / g_val) * 4.5
+    times = np.linspace(0, t_total, total_frames)
 
-  writer = PillowWriter(fps=15)
-  with writer.saving(fig, "drop_sim.gif", dpi=100):
-    for t in times:
-      v_curr = vt_val * math.tanh((g_val * t) / vt_val)
-      alt_curr = max(0.0, h * (1 - (t / t_total)))
+    writer = PillowWriter(fps=15)
+    with writer.saving(fig, "drop_sim.gif", dpi=100):
+        for t in times:
+            v_curr = vt_val * math.tanh((g_val * t) / vt_val)
+            alt_curr = max(0.0, h * (1 - (t / t_total)))
 
-      sphere.set_offsets(np.column_stack((5, alt_curr)))
-      wind_y = (wind_y + (v_curr / vt_val) * (h * 0.06)) % h
-      wind.set_offsets(np.c_[wind_x, wind_y])
+            sphere.set_offsets(np.column_stack((5, alt_curr)))
+            wind_y = (wind_y + (v_curr / vt_val) * (h * 0.06)) % h
+            wind.set_offsets(np.c_[wind_x, wind_y])
 
-      hud.set_text(
-          f"ALTITUDE: {alt_curr:7.1f} m\n"
-          f"SPEED:    {v_curr:7.2f} m/s\n"
-          f"GRAVITY:  {g_val:7.4f} m/s²"
-      )
-      if v_curr >= 0.97 * vt_val:
-        status.set_text("● TERMINAL VELOCITY (a = 0)")
-        status.set_color("#34d399")
-      else:
-        status.set_text("▼ ACCELERATING...")
+            hud.set_text(
+                f"ALTITUDE: {alt_curr:7.1f} m\n"
+                f"SPEED:    {v_curr:7.2f} m/s\n"
+                f"GRAVITY:  {g_val:7.4f} m/s²"
+            )
+            if v_curr >= 0.97 * vt_val:
+                status.set_text("● TERMINAL VELOCITY (a = 0)")
+                status.set_color("#34d399")
+            else:
+                status.set_text("▼ ACCELERATING...")
 
-      writer.grab_frame()
-  plt.close(fig)
+            writer.grab_frame()
+    plt.close(fig)
 
-  with open("drop_sim.gif", "rb") as f:
-    return base64.b64encode(f.read()).decode("utf-8")
+    with open("drop_sim.gif", "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
 
 
 def render_seaborn_graphs(m, h, A, g_val, vt_val):
-  fig, axes = plt.subplots(2, 2, figsize=(12, 8))
-  ax1, ax2, ax3, ax4 = axes.flatten()
+    fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+    ax1, ax2, ax3, ax4 = axes.flatten()
 
-  h_vals = np.linspace(250, 5000, 200)
-  sns.lineplot(
-      x=h_vals, y=calc_terminal_velocity(m, h_vals, A), ax=ax1
-  ).set(
-      title="Velocity vs. Height",
-      xlabel="Height (m)",
-      ylabel="Terminal Velocity (m/s)",
-  )
+    h_vals = np.linspace(250, 5000, 200)
+    sns.lineplot(
+        x=h_vals, y=calc_terminal_velocity(m, h_vals, A), ax=ax1
+    ).set(
+        title="Velocity vs. Height",
+        xlabel="Height (m)",
+        ylabel="Terminal Velocity (m/s)",
+    )
 
-  A_vals = np.linspace(0.01, 50, 200)
-  sns.lineplot(
-      x=A_vals, y=calc_terminal_velocity(m, h, A_vals), ax=ax2
-  ).set(
-      title="Velocity vs. Area",
-      xlabel="Cross-Sectional Area (m²)",
-      ylabel="Terminal Velocity (m/s)",
-  )
+    A_vals = np.linspace(0.01, 50, 200)
+    sns.lineplot(
+        x=A_vals, y=calc_terminal_velocity(m, h, A_vals), ax=ax2
+    ).set(
+        title="Velocity vs. Area",
+        xlabel="Cross-Sectional Area (m²)",
+        ylabel="Terminal Velocity (m/s)",
+    )
 
-  m_vals = np.linspace(0.5, 500, 200)
-  sns.lineplot(
-      x=m_vals, y=calc_terminal_velocity(m_vals, h, A), ax=ax3
-  ).set(
-      title="Velocity vs. Mass",
-      xlabel="Mass (kg)",
-      ylabel="Terminal Velocity (m/s)",
-  )
+    m_vals = np.linspace(0.5, 500, 200)
+    sns.lineplot(
+        x=m_vals, y=calc_terminal_velocity(m_vals, h, A), ax=ax3
+    ).set(
+        title="Velocity vs. Mass",
+        xlabel="Mass (kg)",
+        ylabel="Terminal Velocity (m/s)",
+    )
 
-  t_vals = np.linspace(0, (vt_val / g_val) * 4, 200)
-  speed_vals = vt_val * np.tanh((g_val * t_vals) / vt_val)
-  sns.lineplot(
-      x=t_vals, y=speed_vals, ax=ax4, color="darkorange"
-  ).set(title="Speed vs. Time", xlabel="Time (s)", ylabel="Speed (m/s)")
+    t_vals = np.linspace(0, (vt_val / g_val) * 4, 200)
+    speed_vals = vt_val * np.tanh((g_val * t_vals) / vt_val)
+    sns.lineplot(
+        x=t_vals, y=speed_vals, ax=ax4, color="darkorange"
+    ).set(title="Speed vs. Time", xlabel="Time (s)", ylabel="Speed (m/s)")
 
-  plt.tight_layout()
-  buf = io.BytesIO()
-  plt.savefig(buf, format="png", dpi=140)
-  plt.close(fig)
-  return base64.b64encode(buf.getvalue()).decode("utf-8")
+    plt.tight_layout()
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png", dpi=140)
+    plt.close(fig)
+    return base64.b64encode(buf.getvalue()).decode("utf-8")
 
 
 class TerminalHandler(BaseHTTPRequestHandler):
 
-  def build_page(self, form_data=None):
-    fields = {"mass": "75", "height": "2000", "area": "0.7"}
-    active = "mass"
-    show_graphs = False
-    said_no = False
-    error_html = ""
-
-    if form_data:
-      fields["mass"] = form_data.get("mass", ["75"])
-      fields["height"] = form_data.get("height", ["2000"])
-      fields["area"] = form_data.get("area", ["0.7"])
-      active = form_data.get("active_field", ["mass"])
-      show_graphs = form_data.get("show_graphs", ["False"]) == "True"
-
-      key = form_data.get("key", [None])
-      action = form_data.get("action", [None])
-
-      if key:
-        fields[active] += key
-      elif action == "backspace":
-        fields[active] = fields[active][:-1]
-      elif action == "clear":
-        fields[active] = ""
-      elif action == "graphs_yes":
-        show_graphs = True
-      elif action == "graphs_no":
+    def build_page(self, form_data=None):
+        fields = {"mass": "75", "height": "2000", "area": "0.7"}
+        active = "mass"
         show_graphs = False
-        said_no = True
+        said_no = False
+        error_html = ""
 
-    g_str, rho_str, vt_str = "--", "--", "--"
-    anim_html = ""
-    graphs_html = ""
-    no_html = ""
+        if form_data:
+            fields["mass"] = form_data.get("mass", ["75"])[0]
+            fields["height"] = form_data.get("height", ["2000"])[0]
+            fields["area"] = form_data.get("area", ["0.7"])[0]
+            active = form_data.get("active_field", ["mass"])[0]
+            show_graphs = form_data.get("show_graphs", ["False"])[0] == "True"
 
-    try:
-      m_num = safe_eval(fields["mass"])
-      h_num = safe_eval(fields["height"])
-      a_num = safe_eval(fields["area"])
+            key = form_data.get("key", [None])[0]
+            action = form_data.get("action", [None])[0]
 
-      g_val = float(calc_gravity(h_num))
-      rho_val = float(calc_density(h_num))
-      vt_val = float(calc_terminal_velocity(m_num, h_num, a_num))
+            if key:
+                fields[active] += key
+            elif action == "backspace":
+                fields[active] = fields[active][:-1]
+            elif action == "clear":
+                fields[active] = ""
+            elif action == "graphs_yes":
+                show_graphs = True
+            elif action == "graphs_no":
+                show_graphs = False
+                said_no = True
 
-      g_str = f"{g_val:.4f} m/s²"
-      rho_str = f"{rho_val:.4f} kg/m³"
-      vt_str = f"{vt_val:.2f} m/s"
+        g_str, rho_str, vt_str = "--", "--", "--"
+        anim_html = ""
+        graphs_html = ""
+        no_html = ""
 
-      gif_b64 = render_drop_gif(m_num, h_num, a_num, g_val, vt_val)
-      anim_html = (
-          f'<img src="data:image/gif;base64,{gif_b64}" alt="Drop Simulation"'
-          ' class="media-box" />'
-      )
+        try:
+            m_num = safe_eval(fields["mass"])
+            h_num = safe_eval(fields["height"])
+            a_num = safe_eval(fields["area"])
 
-      if show_graphs:
-        png_b64 = render_seaborn_graphs(m_num, h_num, a_num, g_val, vt_val)
-        graphs_html = f'<div class="card full-width"><img src="data:image/png;base64,{png_b64}" alt="Seaborn Graphs" class="media-box" /></div>'
+            g_val = float(calc_gravity(h_num))
+            rho_val = float(calc_density(h_num))
+            vt_val = float(calc_terminal_velocity(m_num, h_num, a_num))
 
-    except Exception:
-      error_html = (
-          '<div class="error">Enter valid positive math expressions (e.g. 75,'
-          " sqrt(49), 2**3).</div>"
-      )
+            g_str = f"{g_val:.4f} m/s²"
+            rho_str = f"{rho_val:.4f} kg/m³"
+            vt_str = f"{vt_val:.2f} m/s"
 
-    if said_no:
-      no_html = '<p class="goodbye">OK, HAVE A GOOD DAY!!!!!</p>'
+            gif_b64 = render_drop_gif(m_num, h_num, a_num, g_val, vt_val)
+            anim_html = (
+                f'<img src="data:image/gif;base64,{gif_b64}" alt="Drop Simulation"'
+                ' class="media-box" />'
+            )
 
-    with open("index.html", "r", encoding="utf-8") as f:
-      html = f.read()
+            if show_graphs:
+                png_b64 = render_seaborn_graphs(m_num, h_num, a_num, g_val, vt_val)
+                graphs_html = f'<div class="card full-width"><img src="data:image/png;base64,{png_b64}" alt="Seaborn Graphs" class="media-box" /></div>'
 
-    replacements = {
-        "{{MASS}}": fields["mass"],
-        "{{HEIGHT}}": fields["height"],
-        "{{AREA}}": fields["area"],
-        "{{CHK_MASS}}": "checked" if active == "mass" else "",
-        "{{CHK_HEIGHT}}": "checked" if active == "height" else "",
-        "{{CHK_AREA}}": "checked" if active == "area" else "",
-        "{{SHOW_GRAPHS}}": str(show_graphs),
-        "{{G_VAL}}": g_str,
-        "{{RHO_VAL}}": rho_str,
-        "{{VT_VAL}}": vt_str,
-        "{{ANIM_HTML}}": anim_html,
-        "{{GRAPHS_HTML}}": graphs_html,
-        "{{NO_HTML}}": no_html,
-        "{{ERROR_HTML}}": error_html,
-    }
-    for k, v in replacements.items():
-      html = html.replace(k, v)
-    return html.encode("utf-8")
+        except Exception:
+            error_html = (
+                '<div class="error">Enter valid positive math expressions (e.g. 75,'
+                " sqrt(49), 2**3).</div>"
+            )
 
-  def do_GET(self):
-    self.send_response(200)
-    self.send_header("Content-type", "text/html; charset=utf-8")
-    self.end_headers()
-    self.wfile.write(self.build_page())
+        if said_no:
+            no_html = '<p class="goodbye">OK, HAVE A GOOD DAY!!!!!</p>'
 
-  def do_POST(self):
-    length = int(self.headers.get("Content-Length", 0))
-    body = self.rfile.read(length).decode("utf-8")
-    form_data = urllib.parse.parse_qs(body)
-    self.send_response(200)
-    self.send_header("Content-type", "text/html; charset=utf-8")
-    self.end_headers()
-    self.wfile.write(self.build_page(form_data))
+        with open("index.html", "r", encoding="utf-8") as f:
+            html = f.read()
+
+        replacements = {
+            "{{MASS}}": str(fields["mass"]),
+            "{{HEIGHT}}": str(fields["height"]),
+            "{{AREA}}": str(fields["area"]),
+            "{{CHK_MASS}}": "checked" if active == "mass" else "",
+            "{{CHK_HEIGHT}}": "checked" if active == "height" else "",
+            "{{CHK_AREA}}": "checked" if active == "area" else "",
+            "{{SHOW_GRAPHS}}": str(show_graphs),
+            "{{G_VAL}}": g_str,
+            "{{RHO_VAL}}": rho_str,
+            "{{VT_VAL}}": vt_str,
+            "{{ANIM_HTML}}": anim_html,
+            "{{GRAPHS_HTML}}": graphs_html,
+            "{{NO_HTML}}": no_html,
+            "{{ERROR_HTML}}": error_html,
+        }
+        for k, v in replacements.items():
+            html = html.replace(k, v)
+        return html.encode("utf-8")
+
+    def do_GET(self):
+        page = self.build_page()
+        self.send_response(200)
+        self.send_header("Content-type", "text/html; charset=utf-8")
+        self.end_headers()
+        self.wfile.write(page)
+
+    def do_POST(self):
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length).decode("utf-8")
+        form_data = urllib.parse.parse_qs(body)
+        page = self.build_page(form_data)
+        self.send_response(200)
+        self.send_header("Content-type", "text/html; charset=utf-8")
+        self.end_headers()
+        self.wfile.write(page)
 
 
 if __name__ == "__main__":
-  port = int(os.environ.get("PORT", 8000))
-  print(f"THE TERMINAL is running at http://127.0.0.1:{port}")
-  HTTPServer(("0.0.0.0", port), TerminalHandler).serve_forever()
+    port = int(os.environ.get("PORT", 5000))
+    print(f"THE TERMINAL is running at http://127.0.0.1:{port}")
+    HTTPServer(("0.0.0.0", port), TerminalHandler).serve_forever()
