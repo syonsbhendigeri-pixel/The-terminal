@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>THE TERMINAL // Atmospheric Drop Calculator</title>
+  <style>
+    :root {
+      --panel: rgba(15, 23, 42, 0.85);
+      --border: rgba(56, 189, 248, 0.3);
+      --cyan: #38bdf8;
+      --orange: #fb923c;
+      --green: #34d399;
+      --pink: #f43f5e;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.14), transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(251, 146, 60, 0.12), transparent 40%),
+        linear-gradient(180deg, #020617 0%, #090d16 100%);
+      padding: 24px;
+    }
+
+    header { text-align: center; margin-bottom: 24px; }
+    header h1 {
+      margin: 0; font-size: 2.3rem; letter-spacing: 0.18em;
+      background: linear-gradient(90deg, #38bdf8, #e0f2fe, #fb923c);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    header p { color: var(--muted); margin: 6px 0 0; }
+
+    .main-grid {
+      max-width: 1200px; margin: 0 auto;
+      display: grid; grid-template-columns: 380px 1fr; gap: 24px;
+    }
+    @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px; backdrop-filter: blur(12px);
+    }
+
+    .full-width { max-width: 1200px; margin: 24px auto 0; text-align: center; }
+
+    .input-group { margin-bottom: 12px; }
+    .input-header {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; text-transform: uppercase;
+    }
+    .radio-label { color: var(--cyan); font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+
+    .calc-input {
+      width: 100%; background: #020617; border: 1px solid #334155;
+      color: var(--cyan); font-family: 'Consolas', monospace;
+      font-size: 1.15rem; padding: 10px 12px; border-radius: 8px; outline: none;
+    }
+    .calc-input:focus { border-color: var(--cyan); }
+
+    .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+    .key {
+      background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(148, 163, 184, 0.2);
+      color: var(--text); padding: 12px 0; border-radius: 8px;
+      font-size: 1rem; font-weight: 600; cursor: pointer;
+    }
+    .key:hover { background: rgba(56, 189, 248, 0.2); border-color: var(--cyan); }
+    .key.op { color: var(--orange); }
+    .key.clear { color: var(--pink); }
+    .key.calc-btn {
+      grid-column: span 4; background: linear-gradient(90deg, #0284c7, #38bdf8);
+      color: #020617; font-weight: 800; letter-spacing: 0.08em; margin-top: 4px;
+    }
+
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
+    .metric-box {
+      background: rgba(2, 6, 23, 0.7); border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 12px; padding: 14px; text-align: center;
+    }
+    .metric-box span { display: block; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; }
+    .metric-box strong { display: block; font-size: 1.45rem; color: var(--cyan); margin-top: 4px; font-family: 'Consolas', monospace; }
+
+    .media-box {
+      width: 100%; border-radius: 12px; border: 1px solid #1e293b; display: block;
+    }
+
+    .graph-prompt {
+      margin-top: 18px; padding: 14px; background: rgba(2, 6, 23, 0.6);
+      border-radius: 12px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .yn-btns button { padding: 8px 22px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; margin-left: 8px; }
+    .btn-yes { background: var(--green); color: #020617; }
+    .btn-no { background: #334155; color: var(--text); }
+
+    .goodbye { color: var(--green); font-weight: bold; margin: 12px 0 0; }
+    .error { color: var(--pink); font-size: 0.88rem; margin-top: 10px; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>THE TERMINAL</h1>
+    <p>100% PYTHON &amp; HTML AEROSPACE DRAG CALCULATOR</p>
+  </header>
+
+  <form method="POST" action="/">
+    <input type="hidden" name="show_graphs" value="{{SHOW_GRAPHS}}" />
+
+    <div class="main-grid">
+      <div class="card">
+        <div class="input-group">
+          <div class="input-header">
+            <label class="radio-label">
+              <input type="radio" name="active_field" value="mass" {{CHK_MASS}} />
+              Mass (m)
+            </label>
+            <span>kg</span>
+          </div>
+          <input type="text" name="mass" class="calc-input" value="{{MASS}}" />
+        </div>
+
+        <div class="input-group">
+          <div class="input-header">
+            <label class="radio-label">
+              <input type="radio" name="active_field" value="height" {{CHK_HEIGHT}} />
+              Drop Height (h)
+            </label>
+            <span>meters</span>
+          </div>
+          <input type="text" name="height" class="calc-input" value="{{HEIGHT}}" />
+        </div>
+
+        <div class="input-group">
+          <div class="input-header">
+            <label class="radio-label">
+              <input type="radio" name="active_field" value="area" {{CHK_AREA}} />
+              Cross-Sectional Area (A)
+            </label>
+            <span>m²</span>
+          </div>
+          <input type="text" name="area" class="calc-input" value="{{AREA}}" />
+        </div>
+
+        <div class="keypad">
+          <button type="submit" name="key" value="sqrt(" class="key op">√</button>
+          <button type="submit" name="key" value="**" class="key op">xʸ</button>
+          <button type="submit" name="key" value="e" class="key op">×10ˣ</button>
+          <button type="submit" name="action" value="backspace" class="key clear">⌫</button>
+
+          <button type="submit" name="key" value="7" class="key">7</button>
+          <button type="submit" name="key" value="8" class="key">8</button>
+          <button type="submit" name="key" value="9" class="key">9</button>
+          <button type="submit" name="key" value="/" class="key op">÷</button>
+
+          <button type="submit" name="key" value="4" class="key">4</button>
+          <button type="submit" name="key" value="5" class="key">5</button>
+          <button type="submit" name="key" value="6" class="key">6</button>
+          <button type="submit" name="key" value="*" class="key op">×</button>
+
+          <button type="submit" name="key" value="1" class="key">1</button>
+          <button type="submit" name="key" value="2" class="key">2</button>
+          <button type="submit" name="key" value="3" class="key">3</button>
+          <button type="submit" name="key" value="-" class="key op">−</button>
+
+          <button type="submit" name="action" value="clear" class="key clear">C</button>
+          <button type="submit" name="key" value="0" class="key">0</button>
+          <button type="submit" name="key" value="." class="key">.</button>
+          <button type="submit" name="key" value="+" class="key op">+</button>
+
+          <button type="submit" name="key" value="(" class="key op">(</button>
+          <button type="submit" name="key" value=")" class="key op">)</button>
+          <button type="submit" name="key" value="pi" class="key op">π</button>
+          <button type="submit" name="action" value="compute" class="key op">=</button>
+
+          <button type="submit" name="action" value="compute" class="key calc-btn">COMPUTE &amp; RENDER DROP SIMULATION</button>
+        </div>
+
+        {{ERROR_HTML}}
+      </div>
+
+      <div class="card">
+        <div class="metrics">
+          <div class="metric-box">
+            <span>Gravity g(h)</span>
+            <strong>{{G_VAL}}</strong>
+          </div>
+          <div class="metric-box">
+            <span>Air Density ρ(h)</span>
+            <strong>{{RHO_VAL}}</strong>
+          </div>
+          <div class="metric-box">
+            <span>Terminal Velocity (vT)</span>
+            <strong style="color: var(--orange);">{{VT_VAL}}</strong>
+          </div>
+        </div>
+
+        {{ANIM_HTML}}
+
+        <div class="graph-prompt">
+          <span><strong>Would you like Python (Seaborn) to generate the 4 graphs?</strong></span>
+          <div class="yn-btns">
+            <button type="submit" name="action" value="graphs_yes" class="btn-yes">YES</button>
+            <button type="submit" name="action" value="graphs_no" class="btn-no">NO</button>
+          </div>
+        </div>
+
+        {{NO_HTML}}
+      </div>
+    </div>
+
+    {{GRAPHS_HTML}}
+  </form>
+
+</body>
+</html>
