@@ -13,10 +13,8 @@ import seaborn as sns
 matplotlib.use("Agg")
 sns.set_theme()
 
-# Security Passcode
 PASSCODE = "mr.jafariisthegoat"
 
-# 1. Physics Constants & Equations from your PDF (Pages 2 & 3)
 D = 0.5
 G = 6.674e-11
 M_E = 5.9722e24
@@ -76,11 +74,7 @@ LOCK_SCREEN_HTML = """<!DOCTYPE html>
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-    p {
-      color: #94a3b8;
-      font-size: 0.9rem;
-      margin: 0 0 22px;
-    }
+    p { color: #94a3b8; font-size: 0.9rem; margin: 0 0 22px; }
     input[type="password"] {
       width: 100%;
       background: #020617;
@@ -111,12 +105,7 @@ LOCK_SCREEN_HTML = """<!DOCTYPE html>
       cursor: pointer;
     }
     button:hover { opacity: 0.92; }
-    .err {
-      margin-top: 14px;
-      color: #f43f5e;
-      font-size: 0.85rem;
-      font-weight: 700;
-    }
+    .err { margin-top: 14px; color: #f43f5e; font-size: 0.85rem; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -349,3 +338,6 @@ class TerminalHandler(BaseHTTPRequestHandler):
 
             g_val = float(calc_gravity(h_num))
             rho_val = float(calc_density(h_num))
+            vt_val = float(calc_terminal_velocity(m_num, h_num, a_num))
+            fg_val = m_num * g_val
+
