@@ -13,7 +13,7 @@ import seaborn as sns
 matplotlib.use("Agg")
 sns.set_theme()
 
-# 1. Physics Constants & Equations from your PDF
+# 1. Physics Constants & Equations from your PDF (Pages 2 & 3)
 D = 0.5
 G = 6.674e-11
 M_E = 5.9722e24
@@ -46,6 +46,11 @@ def safe_eval(expr):
     if val <= 0:
         raise ValueError("Must be positive")
     return val
+
+
+def get_field(form_data, key, default):
+    vals = form_data.get(key)
+    return next(iter(vals)) if vals else default
 
 
 def render_drop_gif(m, h, A, g_val, vt_val):
@@ -111,6 +116,7 @@ def render_drop_gif(m, h, A, g_val, vt_val):
         for t in times:
             v_curr = vt_val * math.tanh((g_val * t) / vt_val)
             alt_curr = max(0.0, h * (1 - (t / t_total)))
+            g_curr = float(calc_gravity(alt_curr))
 
             sphere.set_offsets(np.column_stack((5, alt_curr)))
             wind_y = (wind_y + (v_curr / vt_val) * (h * 0.06)) % h
@@ -118,8 +124,8 @@ def render_drop_gif(m, h, A, g_val, vt_val):
 
             hud.set_text(
                 f"ALTITUDE: {alt_curr:7.1f} m\n"
-                f"SPEED:    {v_curr:7.2f} m/s\n"
-                f"GRAVITY:  {g_val:7.4f} m/s²"
+                f"GRAVITY:  {g_curr:7.5f} m/s²\n"
+                f"SPEED:    {v_curr:7.2f} m/s"
             )
             if v_curr >= 0.97 * vt_val:
                 status.set_text("● TERMINAL VELOCITY (a = 0)")
@@ -173,7 +179,7 @@ def render_seaborn_graphs(m, h, A, g_val, vt_val):
 
     plt.tight_layout()
     buf = io.BytesIO()
-    plt.savefig(buf, format="png", dpi=140)
+    plt.savefig(buf, format="png", dpi=180)
     plt.close(fig)
     return base64.b64encode(buf.getvalue()).decode("utf-8")
 
@@ -188,14 +194,14 @@ class TerminalHandler(BaseHTTPRequestHandler):
         error_html = ""
 
         if form_data:
-            fields["mass"] = form_data.get("mass", ["75"])[0]
-            fields["height"] = form_data.get("height", ["2000"])[0]
-            fields["area"] = form_data.get("area", ["0.7"])[0]
-            active = form_data.get("active_field", ["mass"])[0]
-            show_graphs = form_data.get("show_graphs", ["False"])[0] == "True"
+            fields["mass"] = get_field(form_data, "mass", "75")
+            fields["height"] = get_field(form_data, "height", "2000")
+            fields["area"] = get_field(form_data, "area", "0.7")
+            active = get_field(form_data, "active_field", "mass")
+            show_graphs = get_field(form_data, "show_graphs", "False") == "True"
 
-            key = form_data.get("key", [None])[0]
-            action = form_data.get("action", [None])[0]
+            key = get_field(form_data, "key", None)
+            action = get_field(form_data, "action", None)
 
             if key:
                 fields[active] += key
@@ -222,8 +228,9 @@ class TerminalHandler(BaseHTTPRequestHandler):
             g_val = float(calc_gravity(h_num))
             rho_val = float(calc_density(h_num))
             vt_val = float(calc_terminal_velocity(m_num, h_num, a_num))
+            fg_val = m_num * g_val
 
-            g_str = f"{g_val:.4f} m/s²"
+            g_str = f"{g_val:.5f} m/s² ({fg_val:.1f} N)"
             rho_str = f"{rho_val:.4f} kg/m³"
             vt_str = f"{vt_val:.2f} m/s"
 
@@ -235,7 +242,13 @@ class TerminalHandler(BaseHTTPRequestHandler):
 
             if show_graphs:
                 png_b64 = render_seaborn_graphs(m_num, h_num, a_num, g_val, vt_val)
-                graphs_html = f'<div class="card full-width"><img src="data:image/png;base64,{png_b64}" alt="Seaborn Graphs" class="media-box" /></div>'
+                graphs_html = (
+                    '<div class="card full-width">'
+                    f'<img src="data:image/png;base64,{png_b64}" alt="Seaborn Graphs" class="media-box" />'
+                    f'<a download="the_terminal_graphs.png" href="data:image/png;base64,{png_b64}" class="download-btn">'
+                    '⬇ Download Lab Report Graphs (PNG)</a>'
+                    '</div>'
+                )
 
         except Exception:
             error_html = (
