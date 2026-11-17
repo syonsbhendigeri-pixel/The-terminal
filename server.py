@@ -13,6 +13,9 @@ import seaborn as sns
 matplotlib.use("Agg")
 sns.set_theme()
 
+# Security Passcode
+PASSCODE = "mr.jafariisthegoat"
+
 # 1. Physics Constants & Equations from your PDF (Pages 2 & 3)
 D = 0.5
 G = 6.674e-11
@@ -20,6 +23,117 @@ M_E = 5.9722e24
 R_E = 6.371e6
 rho_0 = 1.225
 H = 8500
+
+LOCK_SCREEN_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>THE TERMINAL // Security Clearance Required</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #f8fafc;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.16), transparent 45%),
+        radial-gradient(circle at 80% 80%, rgba(244, 63, 94, 0.14), transparent 45%),
+        linear-gradient(180deg, #020617 0%, #090d16 100%);
+      padding: 20px;
+    }
+    .lock-card {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 18px;
+      padding: 32px 28px;
+      text-align: center;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65);
+    }
+    .badge {
+      display: inline-block;
+      padding: 5px 14px;
+      border-radius: 999px;
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid #f43f5e;
+      color: #f43f5e;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      margin-bottom: 14px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.9rem;
+      letter-spacing: 0.16em;
+      background: linear-gradient(90deg, #38bdf8, #e0f2fe, #fb923c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    p {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin: 0 0 22px;
+    }
+    input[type="password"] {
+      width: 100%;
+      background: #020617;
+      border: 1px solid #334155;
+      color: #38bdf8;
+      font-family: 'Consolas', monospace;
+      font-size: 1.05rem;
+      padding: 12px 14px;
+      border-radius: 10px;
+      outline: none;
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    input[type="password"]:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+    }
+    button {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #0284c7, #38bdf8);
+      color: #020617;
+      font-weight: 800;
+      font-size: 0.95rem;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+    }
+    button:hover { opacity: 0.92; }
+    .err {
+      margin-top: 14px;
+      color: #f43f5e;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="lock-card">
+    <div class="badge">🔒 RESTRICTED ACCESS</div>
+    <h1>THE TERMINAL</h1>
+    <p>Enter mission passcode to unlock the Aerospace Drag Simulator.</p>
+    <form method="POST" action="/">
+      <input type="hidden" name="action" value="unlock" />
+      <input type="password" name="passcode" placeholder="Enter passcode..." required autofocus />
+      <button type="submit">UNLOCK TERMINAL</button>
+    </form>
+    {{LOCK_ERROR}}
+  </div>
+</body>
+</html>
+"""
 
 
 def calc_gravity(h):
@@ -186,6 +300,14 @@ def render_seaborn_graphs(m, h, A, g_val, vt_val):
 
 class TerminalHandler(BaseHTTPRequestHandler):
 
+    def is_authenticated(self):
+        cookies = self.headers.get("Cookie", "")
+        return "terminal_unlocked=1" in cookies
+
+    def build_lock_page(self, wrong_pass=False):
+        err = '<div class="err">❌ ACCESS DENIED: Incorrect Passcode</div>' if wrong_pass else ""
+        return LOCK_SCREEN_HTML.replace("{{LOCK_ERROR}}", err).encode("utf-8")
+
     def build_page(self, form_data=None):
         fields = {"mass": "75", "height": "2000", "area": "0.7"}
         active = "mass"
@@ -227,83 +349,3 @@ class TerminalHandler(BaseHTTPRequestHandler):
 
             g_val = float(calc_gravity(h_num))
             rho_val = float(calc_density(h_num))
-            vt_val = float(calc_terminal_velocity(m_num, h_num, a_num))
-            fg_val = m_num * g_val
-
-            g_str = f"{g_val:.5f} m/s² ({fg_val:.1f} N)"
-            rho_str = f"{rho_val:.4f} kg/m³"
-            vt_str = f"{vt_val:.2f} m/s"
-
-            gif_b64 = render_drop_gif(m_num, h_num, a_num, g_val, vt_val)
-            anim_html = (
-                f'<img src="data:image/gif;base64,{gif_b64}" alt="Drop Simulation" class="media-box" />'
-                '<div style="text-align: center;">'
-                f'<a download="the_terminal_drop.gif" href="data:image/gif;base64,{gif_b64}" class="download-btn" style="background: linear-gradient(90deg, #0284c7, #38bdf8);">'
-                '⬇ Download Drop Simulation (GIF)</a>'
-                '</div>'
-            )
-
-            if show_graphs:
-                png_b64 = render_seaborn_graphs(m_num, h_num, a_num, g_val, vt_val)
-                graphs_html = (
-                    '<div class="card full-width">'
-                    f'<img src="data:image/png;base64,{png_b64}" alt="Seaborn Graphs" class="media-box" />'
-                    f'<a download="the_terminal_graphs.png" href="data:image/png;base64,{png_b64}" class="download-btn">'
-                    '⬇ Download Lab Report Graphs (PNG)</a>'
-                    '</div>'
-                )
-
-        except Exception:
-            error_html = (
-                '<div class="error">Enter valid positive math expressions (e.g. 75,'
-                " sqrt(49), 2**3).</div>"
-            )
-
-        if said_no:
-            no_html = '<p class="goodbye">OK, HAVE A GOOD DAY!!!!!</p>'
-
-        with open("index.html", "r", encoding="utf-8") as f:
-            html = f.read()
-
-        replacements = {
-            "{{MASS}}": str(fields["mass"]),
-            "{{HEIGHT}}": str(fields["height"]),
-            "{{AREA}}": str(fields["area"]),
-            "{{CHK_MASS}}": "checked" if active == "mass" else "",
-            "{{CHK_HEIGHT}}": "checked" if active == "height" else "",
-            "{{CHK_AREA}}": "checked" if active == "area" else "",
-            "{{SHOW_GRAPHS}}": str(show_graphs),
-            "{{G_VAL}}": g_str,
-            "{{RHO_VAL}}": rho_str,
-            "{{VT_VAL}}": vt_str,
-            "{{ANIM_HTML}}": anim_html,
-            "{{GRAPHS_HTML}}": graphs_html,
-            "{{NO_HTML}}": no_html,
-            "{{ERROR_HTML}}": error_html,
-        }
-        for k, v in replacements.items():
-            html = html.replace(k, v)
-        return html.encode("utf-8")
-
-    def do_GET(self):
-        page = self.build_page()
-        self.send_response(200)
-        self.send_header("Content-type", "text/html; charset=utf-8")
-        self.end_headers()
-        self.wfile.write(page)
-
-    def do_POST(self):
-        length = int(self.headers.get("Content-Length", 0))
-        body = self.rfile.read(length).decode("utf-8")
-        form_data = urllib.parse.parse_qs(body)
-        page = self.build_page(form_data)
-        self.send_response(200)
-        self.send_header("Content-type", "text/html; charset=utf-8")
-        self.end_headers()
-        self.wfile.write(page)
-
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    print(f"THE TERMINAL is running at http://127.0.0.1:{port}")
-    HTTPServer(("0.0.0.0", port), TerminalHandler).serve_forever()
