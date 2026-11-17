@@ -135,8 +135,9 @@ def render_drop_video(m, h, A, g_val, vt_val, filename="drop_sim.mp4"):
     )
 
     sphere_size = min(450, max(120, 120 + math.sqrt(A) * 90))
-    sphere = ax.scatter(,
-        [h],
+    sphere = ax.scatter(
+        list((5,)),
+        list((h,)),
         s=sphere_size,
         color="#38bdf8",
         edgecolors="white",
@@ -186,7 +187,7 @@ def render_drop_video(m, h, A, g_val, vt_val, filename="drop_sim.mp4"):
             v_curr = vt_val * math.tanh((g_val * t) / vt_val)
             alt_curr = max(0.0, h * (1 - (t / t_total)))
 
-            sphere.set_offsets([[5, alt_curr]])
+            sphere.set_offsets(np.array([[5, alt_curr]]))
             wind_y = (wind_y + (v_curr / vt_val) * (h * 0.06)) % h
             wind.set_offsets(np.c_[wind_x, wind_y])
 
@@ -319,7 +320,7 @@ if st.session_state.show_graphs is True:
     sns.lineplot(
         x=h_vals,
         y=calc_terminal_velocity(m_num, h_vals, a_num),
-        ax=axes[0, 0],
+        ax=axes[0][0],
     ).set(
         title="Velocity vs. Height",
         xlabel="Height (m)",
@@ -331,7 +332,7 @@ if st.session_state.show_graphs is True:
     sns.lineplot(
         x=A_vals,
         y=calc_terminal_velocity(m_num, h_num, A_vals),
-        ax=axes[0, 1],
+        ax=axes[0][1],
     ).set(
         title="Velocity vs. Area",
         xlabel="Cross-Sectional Area (m²)",
@@ -343,7 +344,7 @@ if st.session_state.show_graphs is True:
     sns.lineplot(
         x=m_vals,
         y=calc_terminal_velocity(m_vals, h_num, a_num),
-        ax=axes[1, 0],
+        ax=axes[1][0],
     ).set(
         title="Velocity vs. Mass",
         xlabel="Mass (kg)",
