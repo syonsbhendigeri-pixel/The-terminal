@@ -1,15 +1,13 @@
 import math
 import os
-import imageio_ffmpeg
 import matplotlib
-from matplotlib.animation import FFMpegWriter
+from matplotlib.animation import PillowWriter
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import streamlit as st
 
 matplotlib.use("Agg")
-matplotlib.rcParams["animation.ffmpeg_path"] = imageio_ffmpeg.get_ffmpeg_exe()
 sns.set_theme()
 
 # 1. Page Setup & Sleek Aerospace Dark Theme
@@ -112,8 +110,8 @@ def clear_field():
     st.session_state[st.session_state.active] = ""
 
 
-# 4. Python MP4 Drop Video Generator
-def render_drop_video(m, h, A, g_val, vt_val, filename="drop_sim.mp4"):
+# 4. Built-in Python Animation Generator (No FFmpeg Needed)
+def render_drop_video(m, h, A, g_val, vt_val, filename="drop_sim.gif"):
     fig, ax = plt.subplots(figsize=(7, 3.6), facecolor="#020617")
     ax.set_facecolor("#020617")
     ax.set_xlim(0, 10)
@@ -136,8 +134,8 @@ def render_drop_video(m, h, A, g_val, vt_val, filename="drop_sim.mp4"):
 
     sphere_size = min(450, max(120, 120 + math.sqrt(A) * 90))
     sphere = ax.scatter(
-        list((5,)),
-        list((h,)),
+        (5,),
+        (h,),
         s=sphere_size,
         color="#38bdf8",
         edgecolors="white",
@@ -177,17 +175,17 @@ def render_drop_video(m, h, A, g_val, vt_val, filename="drop_sim.mp4"):
         va="top",
     )
 
-    total_frames = 75
+    total_frames = 50
     t_total = (vt_val / g_val) * 4.5
     times = np.linspace(0, t_total, total_frames)
 
-    writer = FFMpegWriter(fps=20)
-    with writer.saving(fig, filename, dpi=110):
+    writer = PillowWriter(fps=15)
+    with writer.saving(fig, filename, dpi=100):
         for t in times:
             v_curr = vt_val * math.tanh((g_val * t) / vt_val)
             alt_curr = max(0.0, h * (1 - (t / t_total)))
 
-            sphere.set_offsets(np.array([[5, alt_curr]]))
+            sphere.set_offsets(np.column_stack((5, alt_curr)))
             wind_y = (wind_y + (v_curr / vt_val) * (h * 0.06)) % h
             wind.set_offsets(np.c_[wind_x, wind_y])
 
@@ -207,13 +205,13 @@ def render_drop_video(m, h, A, g_val, vt_val, filename="drop_sim.mp4"):
 
 
 # 5. Interface Layout
-left_col, right_col = st.columns([1, 1.5], gap="large")
+left_col, right_col = st.columns((1, 1.5), gap="large")
 
 with left_col:
     st.subheader("🎛️ Scientific Inputs")
     st.session_state.active = st.radio(
         "Select active keypad target:",
-        ["mass", "height", "area"],
+        ("mass", "height", "area"),
         format_func=lambda x: {
             "mass": "Mass (kg)",
             "height": "Drop Height (m)",
@@ -226,14 +224,14 @@ with left_col:
     st.text_input("Drop Height (m)", key="height")
     st.text_input("Cross-Sectional Area (m²)", key="area")
 
-    keys = [
-        [("√", "sqrt("), ("xʸ", "**"), ("×10ˣ", "e"), ("⌫", "BACK")],
-        [("7", "7"), ("8", "8"), ("9", "9"), ("÷", "/")],
-        [("4", "4"), ("5", "5"), ("6", "6"), ("×", "*")],
-        [("1", "1"), ("2", "2"), ("3", "3"), ("−", "-")],
-        [("C", "CLEAR"), ("0", "0"), (".", "."), ("+", "+")],
-        [("(", "("), (")", ")"), ("π", "pi"), ("=", "COMPUTE")],
-    ]
+    keys = (
+        (("√", "sqrt("), ("xʸ", "**"), ("×10ˣ", "e"), ("⌫", "BACK")),
+        (("7", "7"), ("8", "8"), ("9", "9"), ("÷", "/")),
+        (("4", "4"), ("5", "5"), ("6", "6"), ("×", "*")),
+        (("1", "1"), ("2", "2"), ("3", "3"), ("−", "-")),
+        (("C", "CLEAR"), ("0", "0"), (".", "."), ("+", "+")),
+        (("(", "("), (")", ")"), ("π", "pi"), ("=", "COMPUTE")),
+    )
 
     for row in keys:
         cols = st.columns(4)
@@ -269,7 +267,7 @@ with left_col:
                 )
 
     launch_btn = st.button(
-        "🚀 COMPUTE & RENDER DROP VIDEO",
+        "🚀 COMPUTE & RENDER DROP ANIMATION",
         type="primary",
         use_container_width=True,
     )
@@ -289,15 +287,15 @@ with right_col:
         c2.metric("Air Density ρ(h)", f"{rho_val:.4f} kg/m³")
         c3.metric("Terminal Velocity (vT)", f"{vt_val:.2f} m/s")
 
-        if launch_btn or not os.path.exists("drop_sim.mp4"):
-            with st.spinner("Rendering physics drop video in Python..."):
+        if launch_btn or not os.path.exists("drop_sim.gif"):
+            with st.spinner("Rendering physics drop animation in Python..."):
                 render_drop_video(m_num, h_num, a_num, g_val, vt_val)
 
-        if os.path.exists("drop_sim.mp4"):
-            st.video("drop_sim.mp4", autoplay=True, loop=True)
+        if os.path.exists("drop_sim.gif"):
+            st.image("drop_sim.gif", use_container_width=True)
 
         st.markdown("---")
-        q_col, yes_col, no_col = st.columns([3, 1, 1])
+        q_col, yes_col, no_col = st.columns((3, 1, 1))
         q_col.markdown("**Would you like to generate the 4 Seaborn physics graphs?**")
         if yes_col.button("YES", use_container_width=True):
             st.session_state.show_graphs = True
@@ -314,13 +312,14 @@ with right_col:
 if st.session_state.show_graphs is True:
     st.markdown("---")
     fig, axes = plt.subplots(2, 2, figsize=(13, 8))
+    ax1, ax2, ax3, ax4 = axes.flatten()
 
     # Graph 1: Velocity vs. Height
     h_vals = np.linspace(250, 5000, 200)
     sns.lineplot(
         x=h_vals,
         y=calc_terminal_velocity(m_num, h_vals, a_num),
-        ax=axes[0][0],
+        ax=ax1,
     ).set(
         title="Velocity vs. Height",
         xlabel="Height (m)",
@@ -332,7 +331,7 @@ if st.session_state.show_graphs is True:
     sns.lineplot(
         x=A_vals,
         y=calc_terminal_velocity(m_num, h_num, A_vals),
-        ax=axes[0][1],
+        ax=ax2,
     ).set(
         title="Velocity vs. Area",
         xlabel="Cross-Sectional Area (m²)",
@@ -344,10 +343,11 @@ if st.session_state.show_graphs is True:
     sns.lineplot(
         x=m_vals,
         y=calc_terminal_velocity(m_vals, h_num, a_num),
-        ax=axes[1][0],
+        ax=ax3,
     ).set(
         title="Velocity vs. Mass",
         xlabel="Mass (kg)",
         ylabel="Terminal Velocity (m/s)",
     )
 
+    # Graph 4: Speed vs. Time
