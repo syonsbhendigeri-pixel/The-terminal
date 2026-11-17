@@ -236,8 +236,11 @@ class TerminalHandler(BaseHTTPRequestHandler):
 
             gif_b64 = render_drop_gif(m_num, h_num, a_num, g_val, vt_val)
             anim_html = (
-                f'<img src="data:image/gif;base64,{gif_b64}" alt="Drop Simulation"'
-                ' class="media-box" />'
+                f'<img src="data:image/gif;base64,{gif_b64}" alt="Drop Simulation" class="media-box" />'
+                '<div style="text-align: center;">'
+                f'<a download="the_terminal_drop.gif" href="data:image/gif;base64,{gif_b64}" class="download-btn" style="background: linear-gradient(90deg, #0284c7, #38bdf8);">'
+                '⬇ Download Drop Simulation (GIF)</a>'
+                '</div>'
             )
 
             if show_graphs:
