@@ -31,11 +31,7 @@ LOCK_SCREEN_HTML = """<!DOCTYPE html>
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
     body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
       color: #f8fafc;
       background:
         radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.16), transparent 45%),
@@ -44,65 +40,32 @@ LOCK_SCREEN_HTML = """<!DOCTYPE html>
       padding: 20px;
     }
     .lock-card {
-      width: 100%;
-      max-width: 420px;
-      background: rgba(15, 23, 42, 0.88);
-      border: 1px solid rgba(56, 189, 248, 0.35);
-      border-radius: 18px;
-      padding: 32px 28px;
-      text-align: center;
-      backdrop-filter: blur(12px);
+      width: 100%; max-width: 420px; background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 18px;
+      padding: 32px 28px; text-align: center; backdrop-filter: blur(12px);
       box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65);
     }
     .badge {
-      display: inline-block;
-      padding: 5px 14px;
-      border-radius: 999px;
-      background: rgba(244, 63, 94, 0.15);
-      border: 1px solid #f43f5e;
-      color: #f43f5e;
-      font-size: 0.75rem;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      margin-bottom: 14px;
+      display: inline-block; padding: 5px 14px; border-radius: 999px;
+      background: rgba(244, 63, 94, 0.15); border: 1px solid #f43f5e;
+      color: #f43f5e; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.12em; margin-bottom: 14px;
     }
     h1 {
-      margin: 0 0 8px;
-      font-size: 1.9rem;
-      letter-spacing: 0.16em;
+      margin: 0 0 8px; font-size: 1.9rem; letter-spacing: 0.16em;
       background: linear-gradient(90deg, #38bdf8, #e0f2fe, #fb923c);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
     p { color: #94a3b8; font-size: 0.9rem; margin: 0 0 22px; }
     input[type="password"] {
-      width: 100%;
-      background: #020617;
-      border: 1px solid #334155;
-      color: #38bdf8;
-      font-family: 'Consolas', monospace;
-      font-size: 1.05rem;
-      padding: 12px 14px;
-      border-radius: 10px;
-      outline: none;
-      text-align: center;
-      margin-bottom: 14px;
+      width: 100%; background: #020617; border: 1px solid #334155; color: #38bdf8;
+      font-family: 'Consolas', monospace; font-size: 1.05rem; padding: 12px 14px;
+      border-radius: 10px; outline: none; text-align: center; margin-bottom: 14px;
     }
-    input[type="password"]:focus {
-      border-color: #38bdf8;
-      box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
-    }
+    input[type="password"]:focus { border-color: #38bdf8; box-shadow: 0 0 12px rgba(56, 189, 248, 0.25); }
     button {
-      width: 100%;
-      padding: 13px;
-      border: none;
-      border-radius: 10px;
+      width: 100%; padding: 13px; border: none; border-radius: 10px;
       background: linear-gradient(90deg, #0284c7, #38bdf8);
-      color: #020617;
-      font-weight: 800;
-      font-size: 0.95rem;
-      letter-spacing: 0.08em;
-      cursor: pointer;
+      color: #020617; font-weight: 800; font-size: 0.95rem; letter-spacing: 0.08em; cursor: pointer;
     }
     button:hover { opacity: 0.92; }
     .err { margin-top: 14px; color: #f43f5e; font-size: 0.85rem; font-weight: 700; }
@@ -139,13 +102,7 @@ def calc_terminal_velocity(m, h, A):
 
 def safe_eval(expr):
     clean = str(expr).replace("^", "**")
-    val = float(
-        eval(
-            clean,
-            {"__builtins__": None},
-            {"sqrt": math.sqrt, "pi": math.pi, "exp": math.exp},
-        )
-    )
+    val = float(eval(clean, {"__builtins__": None}, {"sqrt": math.sqrt, "pi": math.pi, "exp": math.exp}))
     if val <= 0:
         raise ValueError("Must be positive")
     return val
@@ -168,47 +125,18 @@ def render_drop_gif(m, h, A, g_val, vt_val):
         spine.set_color("#1e293b")
 
     ax.axhline(0, color="#34d399", lw=2)
-    ax.text(
-        0.2,
-        h * 0.02,
-        "EARTH SURFACE (0 m)",
-        color="#34d399",
-        fontsize=8,
-        fontweight="bold",
-    )
+    ax.text(0.2, h * 0.02, "EARTH SURFACE (0 m)", color="#34d399", fontsize=8, fontweight="bold")
 
     sphere_size = min(450, max(120, 120 + math.sqrt(A) * 90))
-    sphere = ax.scatter(
-        (5,), (h,), s=sphere_size, color="#38bdf8", edgecolors="white", zorder=5
-    )
+    sphere = ax.scatter((5,), (h,), s=sphere_size, color="#38bdf8", edgecolors="white", zorder=5)
 
     rng = np.random.default_rng(42)
     wind_x = rng.uniform(0.5, 9.5, 18)
     wind_y = rng.uniform(0, h, 18)
-    wind = ax.scatter(
-        wind_x, wind_y, marker="|", s=80, color="#38bdf8", alpha=0.35
-    )
+    wind = ax.scatter(wind_x, wind_y, marker="|", s=80, color="#38bdf8", alpha=0.35)
 
-    hud = ax.text(
-        0.3,
-        h * 0.96,
-        "",
-        color="#f8fafc",
-        fontsize=9,
-        family="monospace",
-        va="top",
-    )
-    status = ax.text(
-        9.7,
-        h * 0.96,
-        "",
-        color="#fb923c",
-        fontsize=9,
-        family="monospace",
-        fontweight="bold",
-        ha="right",
-        va="top",
-    )
+    hud = ax.text(0.3, h * 0.96, "", color="#f8fafc", fontsize=9, family="monospace", va="top")
+    status = ax.text(9.7, h * 0.96, "", color="#fb923c", fontsize=9, family="monospace", fontweight="bold", ha="right", va="top")
 
     total_frames = 40
     t_total = (vt_val / g_val) * 4.5
@@ -225,11 +153,7 @@ def render_drop_gif(m, h, A, g_val, vt_val):
             wind_y = (wind_y + (v_curr / vt_val) * (h * 0.06)) % h
             wind.set_offsets(np.c_[wind_x, wind_y])
 
-            hud.set_text(
-                f"ALTITUDE: {alt_curr:7.1f} m\n"
-                f"GRAVITY:  {g_curr:7.5f} m/s²\n"
-                f"SPEED:    {v_curr:7.2f} m/s"
-            )
+            hud.set_text(f"ALTITUDE: {alt_curr:7.1f} m\nGRAVITY:  {g_curr:7.5f} m/s²\nSPEED:    {v_curr:7.2f} m/s")
             if v_curr >= 0.97 * vt_val:
                 status.set_text("● TERMINAL VELOCITY (a = 0)")
                 status.set_color("#34d399")
@@ -248,46 +172,32 @@ def render_seaborn_graphs(m, h, A, g_val, vt_val):
     ax1, ax2, ax3, ax4 = axes.flatten()
 
     h_vals = np.linspace(250, 5000, 200)
-    sns.lineplot(
-        x=h_vals, y=calc_terminal_velocity(m, h_vals, A), ax=ax1
-    ).set(
-        title="Velocity vs. Height",
-        xlabel="Height (m)",
-        ylabel="Terminal Velocity (m/s)",
+    sns.lineplot(x=h_vals, y=calc_terminal_velocity(m, h_vals, A), ax=ax1).set(
+        title="Velocity vs. Height", xlabel="Height (m)", ylabel="Terminal Velocity (m/s)"
     )
 
     A_vals = np.linspace(0.01, 50, 200)
-    sns.lineplot(
-        x=A_vals, y=calc_terminal_velocity(m, h, A_vals), ax=ax2
-    ).set(
-        title="Velocity vs. Area",
-        xlabel="Cross-Sectional Area (m²)",
-        ylabel="Terminal Velocity (m/s)",
+    sns.lineplot(x=A_vals, y=calc_terminal_velocity(m, h, A_vals), ax=ax2).set(
+        title="Velocity vs. Area", xlabel="Cross-Sectional Area (m²)", ylabel="Terminal Velocity (m/s)"
     )
 
     m_vals = np.linspace(0.5, 500, 200)
-    sns.lineplot(
-        x=m_vals, y=calc_terminal_velocity(m_vals, h, A), ax=ax3
-    ).set(
-        title="Velocity vs. Mass",
-        xlabel="Mass (kg)",
-        ylabel="Terminal Velocity (m/s)",
+    sns.lineplot(x=m_vals, y=calc_terminal_velocity(m_vals, h, A), ax=ax3).set(
+        title="Velocity vs. Mass", xlabel="Mass (kg)", ylabel="Terminal Velocity (m/s)"
     )
 
     t_vals = np.linspace(0, (vt_val / g_val) * 4, 200)
     speed_vals = vt_val * np.tanh((g_val * t_vals) / vt_val)
-    sns.lineplot(
-        x=t_vals, y=speed_vals, ax=ax4, color="darkorange"
-    ).set(title="Speed vs. Time", xlabel="Time (s)", ylabel="Speed (m/s)")
+    sns.lineplot(x=t_vals, y=speed_vals, ax=ax4, color="darkorange").set(
+        title="Speed vs. Time", xlabel="Time (s)", ylabel="Speed (m/s)"
+    )
 
     plt.tight_layout()
     buf = io.BytesIO()
     plt.savefig(buf, format="png", dpi=180)
     plt.close(fig)
     return base64.b64encode(buf.getvalue()).decode("utf-8")
-
-
-class TerminalHandler(BaseHTTPRequestHandler):
+  class TerminalHandler(BaseHTTPRequestHandler):
 
     def is_authenticated(self):
         cookies = self.headers.get("Cookie", "")
@@ -341,3 +251,109 @@ class TerminalHandler(BaseHTTPRequestHandler):
             vt_val = float(calc_terminal_velocity(m_num, h_num, a_num))
             fg_val = m_num * g_val
 
+            g_str = f"{g_val:.5f} m/s² ({fg_val:.1f} N)"
+            rho_str = f"{rho_val:.4f} kg/m³"
+            vt_str = f"{vt_val:.2f} m/s"
+
+            gif_b64 = render_drop_gif(m_num, h_num, a_num, g_val, vt_val)
+            anim_html = (
+                f'<img src="data:image/gif;base64,{gif_b64}" alt="Drop Simulation" class="media-box" />'
+                '<div style="text-align: center;">'
+                f'<a download="the_terminal_drop.gif" href="data:image/gif;base64,{gif_b64}" class="download-btn" style="background: linear-gradient(90deg, #0284c7, #38bdf8);">'
+                '⬇ Download Drop Simulation (GIF)</a>'
+                '</div>'
+            )
+
+            if show_graphs:
+                png_b64 = render_seaborn_graphs(m_num, h_num, a_num, g_val, vt_val)
+                graphs_html = (
+                    '<div class="card full-width">'
+                    f'<img src="data:image/png;base64,{png_b64}" alt="Seaborn Graphs" class="media-box" />'
+                    f'<a download="the_terminal_graphs.png" href="data:image/png;base64,{png_b64}" class="download-btn">'
+                    '⬇ Download Lab Report Graphs (PNG)</a>'
+                    '</div>'
+                )
+
+        except Exception:
+            error_html = '<div class="error">Enter valid positive math expressions (e.g. 75, sqrt(49), 2**3).</div>'
+
+        if said_no:
+            no_html = '<p class="goodbye">OK, HAVE A GOOD DAY!!!!!</p>'
+
+        with open("index.html", "r", encoding="utf-8") as f:
+            html = f.read()
+
+        replacements = {
+            "{{MASS}}": str(fields["mass"]),
+            "{{HEIGHT}}": str(fields["height"]),
+            "{{AREA}}": str(fields["area"]),
+            "{{CHK_MASS}}": "checked" if active == "mass" else "",
+            "{{CHK_HEIGHT}}": "checked" if active == "height" else "",
+            "{{CHK_AREA}}": "checked" if active == "area" else "",
+            "{{SHOW_GRAPHS}}": str(show_graphs),
+            "{{G_VAL}}": g_str,
+            "{{RHO_VAL}}": rho_str,
+            "{{VT_VAL}}": vt_str,
+            "{{ANIM_HTML}}": anim_html,
+            "{{GRAPHS_HTML}}": graphs_html,
+            "{{NO_HTML}}": no_html,
+            "{{ERROR_HTML}}": error_html,
+        }
+        for k, v in replacements.items():
+            html = html.replace(k, v)
+        return html.encode("utf-8")
+
+    def do_GET(self):
+        if not self.is_authenticated():
+            page = self.build_lock_page()
+        else:
+            page = self.build_page()
+
+        self.send_response(200)
+        self.send_header("Content-type", "text/html; charset=utf-8")
+        self.end_headers()
+        self.wfile.write(page)
+
+    def do_POST(self):
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length).decode("utf-8")
+        form_data = urllib.parse.parse_qs(body)
+        action = get_field(form_data, "action", None)
+
+        if not self.is_authenticated():
+            if action == "unlock":
+                entered = get_field(form_data, "passcode", "")
+                if entered == PASSCODE:
+                    page = self.build_page()
+                    self.send_response(200)
+                    self.send_header("Content-type", "text/html; charset=utf-8")
+                    self.send_header("Set-Cookie", "terminal_unlocked=1; Path=/; HttpOnly")
+                    self.end_headers()
+                    self.wfile.write(page)
+                    return
+                else:
+                    page = self.build_lock_page(wrong_pass=True)
+                    self.send_response(200)
+                    self.send_header("Content-type", "text/html; charset=utf-8")
+                    self.end_headers()
+                    self.wfile.write(page)
+                    return
+
+            page = self.build_lock_page()
+            self.send_response(200)
+            self.send_header("Content-type", "text/html; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(page)
+            return
+
+        page = self.build_page(form_data)
+        self.send_response(200)
+        self.send_header("Content-type", "text/html; charset=utf-8")
+        self.end_headers()
+        self.wfile.write(page)
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    print(f"THE TERMINAL is running at http://127.0.0.1:{port}")
+    HTTPServer(("0.0.0.0", port), TerminalHandler).serve_forever()
