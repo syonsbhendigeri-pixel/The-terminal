@@ -13,125 +13,12 @@ import seaborn as sns
 matplotlib.use("Agg")
 sns.set_theme()
 
-PASSCODE = "mr.jafariisthegoat"
-
 D = 0.5
 G = 6.674e-11
 M_E = 5.9722e24
 R_E = 6.371e6
 rho_0 = 1.225
 H = 8500
-
-LOCK_SCREEN_HTML = """<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>THE TERMINAL // Security Clearance Required</title>
-  <style>
-    * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #f8fafc;
-      background:
-        radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.16), transparent 45%),
-        radial-gradient(circle at 80% 80%, rgba(244, 63, 94, 0.14), transparent 45%),
-        linear-gradient(180deg, #020617 0%, #090d16 100%);
-      padding: 20px;
-    }
-    .lock-card {
-      width: 100%;
-      max-width: 420px;
-      background: rgba(15, 23, 42, 0.88);
-      border: 1px solid rgba(56, 189, 248, 0.35);
-      border-radius: 18px;
-      padding: 32px 28px;
-      text-align: center;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65);
-    }
-    .badge {
-      display: inline-block;
-      padding: 5px 14px;
-      border-radius: 999px;
-      background: rgba(244, 63, 94, 0.15);
-      border: 1px solid #f43f5e;
-      color: #f43f5e;
-      font-size: 0.75rem;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      margin-bottom: 14px;
-    }
-    h1 {
-      margin: 0 0 8px;
-      font-size: 1.9rem;
-      letter-spacing: 0.16em;
-      background: linear-gradient(90deg, #38bdf8, #e0f2fe, #fb923c);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    p {
-      color: #94a3b8;
-      font-size: 0.9rem;
-      margin: 0 0 22px;
-    }
-    input[type="password"] {
-      width: 100%;
-      background: #020617;
-      border: 1px solid #334155;
-      color: #38bdf8;
-      font-family: 'Consolas', monospace;
-      font-size: 1.05rem;
-      padding: 12px 14px;
-      border-radius: 10px;
-      outline: none;
-      text-align: center;
-      margin-bottom: 14px;
-    }
-    input[type="password"]:focus {
-      border-color: #38bdf8;
-      box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
-    }
-    button {
-      width: 100%;
-      padding: 13px;
-      border: none;
-      border-radius: 10px;
-      background: linear-gradient(90deg, #0284c7, #38bdf8);
-      color: #020617;
-      font-weight: 800;
-      font-size: 0.95rem;
-      letter-spacing: 0.08em;
-      cursor: pointer;
-    }
-    button:hover { opacity: 0.92; }
-    .err {
-      margin-top: 14px;
-      color: #f43f5e;
-      font-size: 0.85rem;
-      font-weight: 700;
-    }
-  </style>
-</head>
-<body>
-  <div class="lock-card">
-    <div class="badge">🔒 RESTRICTED ACCESS</div>
-    <h1>THE TERMINAL</h1>
-    <p>Enter mission passcode to unlock the Aerospace Drag Simulator.</p>
-    <form method="POST" action="/">
-      <input type="hidden" name="action" value="unlock" />
-      <input type="password" name="passcode" placeholder="Enter passcode..." required autofocus />
-      <button type="submit">UNLOCK TERMINAL</button>
-    </form>
-    {{LOCK_ERROR}}
-  </div>
-</body>
-</html>
-"""
 
 
 def calc_gravity(h):
@@ -295,11 +182,8 @@ def render_seaborn_graphs(m, h, A, g_val, vt_val):
     plt.close(fig)
     return base64.b64encode(buf.getvalue()).decode("utf-8")
 
-class TerminalHandler(BaseHTTPRequestHandler):
 
-    def build_lock_page(self, wrong_pass=False):
-        err = '<div class="err">❌ ACCESS DENIED: Incorrect Passcode</div>' if wrong_pass else ""
-        return LOCK_SCREEN_HTML.replace("{{LOCK_ERROR}}", err).encode("utf-8")
+class TerminalHandler(BaseHTTPRequestHandler):
 
     def build_page(self, form_data=None):
         fields = {"mass": "75", "height": "2000", "area": "0.7"}
@@ -398,7 +282,7 @@ class TerminalHandler(BaseHTTPRequestHandler):
         return html.encode("utf-8")
 
     def do_GET(self):
-        page = self.build_lock_page()
+        page = self.build_page()
         self.send_response(200)
         self.send_header("Content-type", "text/html; charset=utf-8")
         self.end_headers()
@@ -408,34 +292,6 @@ class TerminalHandler(BaseHTTPRequestHandler):
         length = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(length).decode("utf-8")
         form_data = urllib.parse.parse_qs(body)
-        action = get_field(form_data, "action", None)
-        unlocked = get_field(form_data, "unlocked", "0") == "1"
-
-        if not unlocked:
-            if action == "unlock":
-                entered = get_field(form_data, "passcode", "").strip()
-                if entered == PASSCODE:
-                    page = self.build_page()
-                    self.send_response(200)
-                    self.send_header("Content-type", "text/html; charset=utf-8")
-                    self.end_headers()
-                    self.wfile.write(page)
-                    return
-                else:
-                    page = self.build_lock_page(wrong_pass=True)
-                    self.send_response(200)
-                    self.send_header("Content-type", "text/html; charset=utf-8")
-                    self.end_headers()
-                    self.wfile.write(page)
-                    return
-
-            page = self.build_lock_page()
-            self.send_response(200)
-            self.send_header("Content-type", "text/html; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(page)
-            return
-
         page = self.build_page(form_data)
         self.send_response(200)
         self.send_header("Content-type", "text/html; charset=utf-8")
@@ -447,4 +303,3 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"THE TERMINAL is running at http://127.0.0.1:{port}")
     HTTPServer(("0.0.0.0", port), TerminalHandler).serve_forever()
-
