@@ -335,7 +335,7 @@ class TerminalHandler(BaseHTTPRequestHandler):
         graphs_html = ""
         no_html = ""
 
-                try:
+        try:
             m_num = safe_eval(fields["mass"])
             h_num = safe_eval(fields["height"])
             a_num = safe_eval(fields["area"])
