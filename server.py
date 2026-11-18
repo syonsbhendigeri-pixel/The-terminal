@@ -335,7 +335,7 @@ class TerminalHandler(BaseHTTPRequestHandler):
         graphs_html = ""
         no_html = ""
 
-        try:
+                try:
             m_num = safe_eval(fields["mass"])
             h_num = safe_eval(fields["height"])
             a_num = safe_eval(fields["area"])
@@ -348,4 +348,103 @@ class TerminalHandler(BaseHTTPRequestHandler):
             g_str = f"{g_val:.5f} m/s² ({fg_val:.1f} N)"
             rho_str = f"{rho_val:.4f} kg/m³"
             vt_str = f"{vt_val:.2f} m/s"
+
+            gif_b64 = render_drop_gif(m_num, h_num, a_num, g_val, vt_val)
+            anim_html = (
+                f'<img src="data:image/gif;base64,{gif_b64}" alt="Drop Simulation" class="media-box" />'
+                '<div style="text-align: center;">'
+                f'<a download="the_terminal_drop.gif" href="data:image/gif;base64,{gif_b64}" class="download-btn" style="background: linear-gradient(90deg, #0284c7, #38bdf8);">'
+                '⬇ Download Drop Simulation (GIF)</a>'
+                '</div>'
+            )
+
+            if show_graphs:
+                png_b64 = render_seaborn_graphs(m_num, h_num, a_num, g_val, vt_val)
+                graphs_html = (
+                    '<div class="card full-width">'
+                    f'<img src="data:image/png;base64,{png_b64}" alt="Seaborn Graphs" class="media-box" />'
+                    f'<a download="the_terminal_graphs.png" href="data:image/png;base64,{png_b64}" class="download-btn">'
+                    '⬇ Download Lab Report Graphs (PNG)</a>'
+                    '</div>'
+                )
+
+        except Exception:
+            error_html = '<div class="error">Enter valid positive math expressions (e.g. 75, sqrt(49), 2**3).</div>'
+
+        if said_no:
+            no_html = '<p class="goodbye">OK, HAVE A GOOD DAY!!!!!</p>'
+
+        with open("index.html", "r", encoding="utf-8") as f:
+            html = f.read()
+
+        replacements = {
+            "{{MASS}}": str(fields["mass"]),
+            "{{HEIGHT}}": str(fields["height"]),
+            "{{AREA}}": str(fields["area"]),
+            "{{CHK_MASS}}": "checked" if active == "mass" else "",
+            "{{CHK_HEIGHT}}": "checked" if active == "height" else "",
+            "{{CHK_AREA}}": "checked" if active == "area" else "",
+            "{{SHOW_GRAPHS}}": str(show_graphs),
+            "{{G_VAL}}": g_str,
+            "{{RHO_VAL}}": rho_str,
+            "{{VT_VAL}}": vt_str,
+            "{{ANIM_HTML}}": anim_html,
+            "{{GRAPHS_HTML}}": graphs_html,
+            "{{NO_HTML}}": no_html,
+            "{{ERROR_HTML}}": error_html,
+        }
+        for k, v in replacements.items():
+            html = html.replace(k, v)
+        return html.encode("utf-8")
+
+    def do_GET(self):
+        page = self.build_lock_page()
+        self.send_response(200)
+        self.send_header("Content-type", "text/html; charset=utf-8")
+        self.end_headers()
+        self.wfile.write(page)
+
+    def do_POST(self):
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length).decode("utf-8")
+        form_data = urllib.parse.parse_qs(body)
+        action = get_field(form_data, "action", None)
+        unlocked = get_field(form_data, "unlocked", "0") == "1"
+
+        if not unlocked:
+            if action == "unlock":
+                entered = get_field(form_data, "passcode", "").strip()
+                if entered == PASSCODE:
+                    page = self.build_page()
+                    self.send_response(200)
+                    self.send_header("Content-type", "text/html; charset=utf-8")
+                    self.end_headers()
+                    self.wfile.write(page)
+                    return
+                else:
+                    page = self.build_lock_page(wrong_pass=True)
+                    self.send_response(200)
+                    self.send_header("Content-type", "text/html; charset=utf-8")
+                    self.end_headers()
+                    self.wfile.write(page)
+                    return
+
+            page = self.build_lock_page()
+            self.send_response(200)
+            self.send_header("Content-type", "text/html; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(page)
+            return
+
+        page = self.build_page(form_data)
+        self.send_response(200)
+        self.send_header("Content-type", "text/html; charset=utf-8")
+        self.end_headers()
+        self.wfile.write(page)
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    print(f"THE TERMINAL is running at http://127.0.0.1:{port}")
+    HTTPServer(("0.0.0.0", port), TerminalHandler).serve_forever()
 
