@@ -197,7 +197,7 @@ def render_seaborn_graphs(m, h, A, g_val, vt_val):
     plt.savefig(buf, format="png", dpi=180)
     plt.close(fig)
     return base64.b64encode(buf.getvalue()).decode("utf-8")
-  class TerminalHandler(BaseHTTPRequestHandler):
+class TerminalHandler(BaseHTTPRequestHandler):
 
     def is_authenticated(self):
         cookies = self.headers.get("Cookie", "")
@@ -351,8 +351,6 @@ def render_seaborn_graphs(m, h, A, g_val, vt_val):
         self.send_header("Content-type", "text/html; charset=utf-8")
         self.end_headers()
         self.wfile.write(page)
-
-
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"THE TERMINAL is running at http://127.0.0.1:{port}")
