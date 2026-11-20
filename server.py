@@ -13,35 +13,16 @@ import seaborn as sns
 matplotlib.use("Agg")
 sns.set_theme()
 
-D = 0.5
-G = 6.674e-11
-M_E = 5.9722e24
-R_E = 6.371e6
-rho_0 = 1.225
-H = 8500
+D, G, M_E, R_E, rho_0, H = 0.5, 6.674e-11, 5.9722e24, 6.371e6, 1.225, 8500
 
-
-def calc_gravity(h):
-    return G * (M_E / (R_E + h) ** 2)
-
-
-def calc_density(h):
-    return rho_0 * np.exp(-h / H)
-
-
-def calc_terminal_velocity(m, h, A):
-    return np.sqrt((2 * m * calc_gravity(h)) / (D * calc_density(h) * A))
+calc_gravity = lambda h: G * (M_E / (R_E + h) ** 2)
+calc_density = lambda h: rho_0 * np.exp(-h / H)
+calc_terminal_velocity = lambda m, h, A: np.sqrt((2 * m * calc_gravity(h)) / (D * calc_density(h) * A))
 
 
 def safe_eval(expr):
     clean = str(expr).replace("^", "**")
-    val = float(
-        eval(
-            clean,
-            {"__builtins__": None},
-            {"sqrt": math.sqrt, "pi": math.pi, "exp": math.exp},
-        )
-    )
+    val = float(eval(clean, {"__builtins__": None}, {"sqrt": math.sqrt, "pi": math.pi, "exp": math.exp}))
     if val <= 0:
         raise ValueError("Must be positive")
     return val
@@ -64,47 +45,18 @@ def render_drop_gif(m, h, A, g_val, vt_val):
         spine.set_color("#1e293b")
 
     ax.axhline(0, color="#34d399", lw=2)
-    ax.text(
-        0.2,
-        h * 0.02,
-        "EARTH SURFACE (0 m)",
-        color="#34d399",
-        fontsize=8,
-        fontweight="bold",
-    )
+    ax.text(0.2, h * 0.02, "EARTH SURFACE (0 m)", color="#34d399", fontsize=8, fontweight="bold")
 
     sphere_size = min(450, max(120, 120 + math.sqrt(A) * 90))
-    sphere = ax.scatter(
-        (5,), (h,), s=sphere_size, color="#38bdf8", edgecolors="white", zorder=5
-    )
+    sphere = ax.scatter((5,), (h,), s=sphere_size, color="#38bdf8", edgecolors="white", zorder=5)
 
     rng = np.random.default_rng(42)
     wind_x = rng.uniform(0.5, 9.5, 18)
     wind_y = rng.uniform(0, h, 18)
-    wind = ax.scatter(
-        wind_x, wind_y, marker="|", s=80, color="#38bdf8", alpha=0.35
-    )
+    wind = ax.scatter(wind_x, wind_y, marker="|", s=80, color="#38bdf8", alpha=0.35)
 
-    hud = ax.text(
-        0.3,
-        h * 0.96,
-        "",
-        color="#f8fafc",
-        fontsize=9,
-        family="monospace",
-        va="top",
-    )
-    status = ax.text(
-        9.7,
-        h * 0.96,
-        "",
-        color="#fb923c",
-        fontsize=9,
-        family="monospace",
-        fontweight="bold",
-        ha="right",
-        va="top",
-    )
+    hud = ax.text(0.3, h * 0.96, "", color="#f8fafc", fontsize=9, family="monospace", va="top")
+    status = ax.text(9.7, h * 0.96, "", color="#fb923c", fontsize=9, family="monospace", fontweight="bold", ha="right", va="top")
 
     total_frames = 40
     t_total = (vt_val / g_val) * 4.5
@@ -121,11 +73,7 @@ def render_drop_gif(m, h, A, g_val, vt_val):
             wind_y = (wind_y + (v_curr / vt_val) * (h * 0.06)) % h
             wind.set_offsets(np.c_[wind_x, wind_y])
 
-            hud.set_text(
-                f"ALTITUDE: {alt_curr:7.1f} m\n"
-                f"GRAVITY:  {g_curr:7.5f} m/s²\n"
-                f"SPEED:    {v_curr:7.2f} m/s"
-            )
+            hud.set_text(f"ALTITUDE: {alt_curr:7.1f} m\nGRAVITY:  {g_curr:7.5f} m/s²\nSPEED:    {v_curr:7.2f} m/s")
             if v_curr >= 0.97 * vt_val:
                 status.set_text("● TERMINAL VELOCITY (a = 0)")
                 status.set_color("#34d399")
@@ -144,37 +92,30 @@ def render_seaborn_graphs(m, h, A, g_val, vt_val):
     ax1, ax2, ax3, ax4 = axes.flatten()
 
     h_vals = np.linspace(250, 5000, 200)
-    sns.lineplot(
-        x=h_vals, y=calc_terminal_velocity(m, h_vals, A), ax=ax1
-    ).set(
-        title="Velocity vs. Height",
-        xlabel="Height (m)",
-        ylabel="Terminal Velocity (m/s)",
+    sns.lineplot(x=h_vals, y=calc_terminal_velocity(m, h_vals, A), ax=ax1).set(
+        title="Velocity vs. Height", xlabel="Height (m)", ylabel="Terminal Velocity (m/s)"
     )
 
     A_vals = np.linspace(0.01, 50, 200)
-    sns.lineplot(
-        x=A_vals, y=calc_terminal_velocity(m, h, A_vals), ax=ax2
-    ).set(
-        title="Velocity vs. Area",
-        xlabel="Cross-Sectional Area (m²)",
-        ylabel="Terminal Velocity (m/s)",
+    sns.lineplot(x=A_vals, y=calc_terminal_velocity(m, h, A_vals), ax=ax2).set(
+        title="Velocity vs. Area", xlabel="Cross-Sectional Area (m²)", ylabel="Terminal Velocity (m/s)"
     )
 
     m_vals = np.linspace(0.5, 500, 200)
-    sns.lineplot(
-        x=m_vals, y=calc_terminal_velocity(m_vals, h, A), ax=ax3
-    ).set(
-        title="Velocity vs. Mass",
-        xlabel="Mass (kg)",
-        ylabel="Terminal Velocity (m/s)",
+    sns.lineplot(x=m_vals, y=calc_terminal_velocity(m_vals, h, A), ax=ax3).set(
+        title="Velocity vs. Mass", xlabel="Mass (kg)", ylabel="Terminal Velocity (m/s)"
     )
 
     t_vals = np.linspace(0, (vt_val / g_val) * 4, 200)
     speed_vals = vt_val * np.tanh((g_val * t_vals) / vt_val)
-    sns.lineplot(
-        x=t_vals, y=speed_vals, ax=ax4, color="darkorange"
-    ).set(title="Speed vs. Time", xlabel="Time (s)", ylabel="Speed (m/s)")
+    linear_vals = g_val * t_vals
+
+    sns.lineplot(x=t_vals, y=speed_vals, ax=ax4, color="darkorange", label="With Air Drag (Curve)")
+    sns.lineplot(x=t_vals, y=linear_vals, ax=ax4, color="#38bdf8", linestyle="--", label="No Air Drag (Linear: v = gt)")
+    ax4.axhline(vt_val, color="#ef4444", linestyle=":", label=f"Terminal Velocity ({vt_val:.1f} m/s)")
+    ax4.set_ylim(0, vt_val * 1.45)
+    ax4.set(title="Vertical Speed vs. Time", xlabel="Time (s)", ylabel="Vertical Speed (m/s)")
+    ax4.legend(loc="lower right", fontsize=8)
 
     plt.tight_layout()
     buf = io.BytesIO()
@@ -215,9 +156,7 @@ class TerminalHandler(BaseHTTPRequestHandler):
                 said_no = True
 
         g_str, rho_str, vt_str = "--", "--", "--"
-        anim_html = ""
-        graphs_html = ""
-        no_html = ""
+        anim_html, graphs_html, no_html = "", "", ""
 
         try:
             m_num = safe_eval(fields["mass"])
@@ -238,8 +177,7 @@ class TerminalHandler(BaseHTTPRequestHandler):
                 f'<img src="data:image/gif;base64,{gif_b64}" alt="Drop Simulation" class="media-box" />'
                 '<div style="text-align: center;">'
                 f'<a download="the_terminal_drop.gif" href="data:image/gif;base64,{gif_b64}" class="download-btn" style="background: linear-gradient(90deg, #0284c7, #38bdf8);">'
-                '⬇ Download Drop Simulation (GIF)</a>'
-                '</div>'
+                '⬇ Download Drop Simulation (GIF)</a></div>'
             )
 
             if show_graphs:
@@ -248,8 +186,7 @@ class TerminalHandler(BaseHTTPRequestHandler):
                     '<div class="card full-width">'
                     f'<img src="data:image/png;base64,{png_b64}" alt="Seaborn Graphs" class="media-box" />'
                     f'<a download="the_terminal_graphs.png" href="data:image/png;base64,{png_b64}" class="download-btn">'
-                    '⬇ Download Lab Report Graphs (PNG)</a>'
-                    '</div>'
+                    '⬇ Download Lab Report Graphs (PNG)</a></div>'
                 )
 
         except Exception:
